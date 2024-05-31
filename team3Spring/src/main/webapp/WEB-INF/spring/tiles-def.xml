@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+ 
+<tiles-definitions>
+     <!-- 
+     타일즈 설정 추가 정경호 
+     리액트 쓸거지만 혹시 몰라 넣음 폴더는 나중에 사용 시 생성 해야함.
+     -->
+     <!-- 레이아웃2 적용 타일즈 양선진 -->
+    <definition name="/*" template="/WEB-INF/views/layout/baseLayout2.jsp">
+        <put-attribute name="body" value="/WEB-INF/views/{1}.jsp" />
+    </definition>
+    <definition name="/*/*" template="/WEB-INF/views/layout/baseLayout.jsp">
+        <put-attribute name="header" value="/WEB-INF/views/common/header.jsp" />
+        <put-attribute name="footer" value="/WEB-INF/views/common/footer.jsp" />
+        <put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+    </definition>
+    <!-- 경로 3개 타일즈 추가 양선진 -->
+     <definition name="/*/*/*" template="/WEB-INF/views/layout/baseLayout.jsp">
+        <put-attribute name="header" value="/WEB-INF/views/common/header.jsp" />
+        <put-attribute name="footer" value="/WEB-INF/views/common/footer.jsp" />
+        <put-attribute name="body" value="/WEB-INF/views/{1}/{2}/{3}.jsp" />
+    </definition>
+    
+</tiles-definitions>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.ProgramDAO">
+
+
+<!-- resultMap -->
+	<!-- 프로그램에 속한 아이템을 가져오기 위한 코드  -->
+	<resultMap type="kr.kh.team3.model.vo.ItemListVO" id="ItemListMap">
+		<id property="il_num" column="il_num"/>
+		<result property="il_hp_num" column="il_hp_num"/>
+		<result property="il_it_num" column="il_it_num"/>
+		<collection property="hospital_program" ofType="kr.kh.team3.model.vo.HospitalProgramVO"
+				column="li_hp_num" select="selectItemListByProgram"/>
+		<collection property="item" ofType="kr.kh.team3.model.vo.ItemVO"
+				column="il_it_num" select="selectItemListByItem2"/>
+	</resultMap>
+	
+	<select id="selectProgramItem" resultMap="ItemListMap">
+			select * from item_list  where il_hp_num = #{hp_num}
+	</select>
+	
+	<select id="selectItemListByProgram" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where hp_num = #{hp_num} and hp_hsl_num = #{hsl_num} and hp_ho_id = #{user.site_id}
+	</select>
+	
+	<select id="selectItemListByItem2" resultType="kr.kh.team3.model.vo.ItemVO">
+		select * from item where it_num = #{il_it_num}
+	</select>
+	<!-- resultMap -->
+	
+	
+	<!-- 해당 병원에 과목 리스트를 가져오는 코드 resultMap -->
+	<resultMap type="kr.kh.team3.model.vo.HsListVO" id="HsListMap">
+		<id property="hsl_num" column="hsl_num"/>
+		<result property="hsl_hs_num" column="hsl_hs_num"/>
+		<result property="hsl_ho_id" column="hsl_ho_id"/>
+		<collection property="hospital_subject" ofType="kr.kh.team3.model.vo.HospitalSubjectVO"
+			column="hsl_hs_num" select="selectHsListByHospatalSubject"/>
+		<collection property="hospital" ofType="kr.kh.team3.model.vo.HospitalVO"
+			column="hsl_ho_id" select="selectHsListByHospital"/>
+	</resultMap>
+	
+	
+
+	<select id="selectHsListByHospatalSubject" resultType="kr.kh.team3.model.vo.HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{hsl_hs_num}
+	</select>
+	
+	<select id="selectHsListByHospital" resultType="kr.kh.team3.model.vo.HospitalVO">
+		select * from hospital where ho_id = #{hsl_ho_id}
+	</select>
+	<!-- resultMap -->
+	
+	<select id="selectItemSubjectByList" resultType="kr.kh.team3.model.vo.ItemVO">
+		select * from item where it_hsl_num = #{hs_num} and it_ho_id = #{user.site_id}
+	</select>
+	
+	<select id="selectSubject" resultType="kr.kh.team3.model.vo.HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{hs_num}
+	</select>
+	
+	<select id="selelctHsList" resultType="kr.kh.team3.model.vo.HsListVO">
+		select * from hs_list where hsl_hs_num = #{hs_num} and hsl_ho_id = #{user.site_id};
+	</select>
+	
+	<select id="selectHospitalSubject" resultType="kr.kh.team3.model.vo.HsListVO">
+			select * from hs_list where hsl_ho_id = #{user.site_id}
+	</select>
+	
+	<select id="selectItemList" resultType="kr.kh.team3.model.vo.ItemVO">
+		select * from item where it_ho_id = #{user.site_id} ;
+	</select>
+	
+	<select id="selectProgramList" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where hp_ho_id = #{user.site_id}
+	</select>
+	
+ 	<select id="selectItemListList" resultType="kr.kh.team3.model.vo.ItemListVO">
+		select * from item_list where il_hp_num = #{hp_num} 
+	</select> 
+	
+	<select id="selectProgramListByProgramName" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where 
+	</select>
+	
+	<select id="selectItemListByItem" resultType="kr.kh.team3.model.vo.ItemVO">
+		select * from item where it_num = #{il_num}
+	</select>
+	
+	<select id="selectProgram" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+			select * from hospital_program where hp_title = #{pr.hp_title} and hp_ho_id = #{ho_id}
+	</select>
+	
+
+	<select id="selectSubjectByProgramList" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where hp_hsl_num = #{hsl_num} and hp_ho_id = #{user.site_id}
+	</select>
+	
+	<select id="selectReservationScheduleList" resultType="kr.kh.team3.model.vo.ReservationScheduleVO">
+		select * from reservation_schedule where rs_hp_num = #{hp_num} and rs_date > now()
+	</select>
+
+	<insert id="insertItem">
+		insert into item (it_name, it_explanation, it_ho_id, it_hsl_num) value(#{item.it_name}, #{item.it_explanation}, #{user.site_id}, #{hslist.hsl_num});
+	</insert>
+	
+	<insert id="insertProgram">
+		insert into hospital_program (hp_title, hp_payment, hp_ho_id, hp_hsl_num) 
+		value(#{pr.hp_title},#{pr.hp_payment}, #{user.site_id}, #{hsl.hsl_num})
+	</insert>
+	
+	<insert id="insertItemList">
+		insert into item_list(il_hp_num, il_it_num) value(#{pr.hp_num}, #{il_it_num});
+	</insert>
+	
+	<insert id="insertReservationSechedule">
+		insert into reservation_schedule (rs_hp_num, rs_date, rs_time, rs_max_person)
+		value(#{rs_hp_num},#{rs_date},#{rs_time},#{rs_max_person})
+	</insert>
+	
+	<update id="updateItem">
+		update item set it_name = #{item.it_name}, it_explanation = #{item.it_explanation}, it_hsl_num = #{hsl_nul.hsl_num} where it_num = #{it_num}
+	</update>
+	
+	<update id="updateSchedule">
+		update reservation_schedule set rs_date = #{rs_date}, rs_time = #{rs_time}, rs_max_person = #{rs_max_person}
+		where rs_num = #{rs_num}
+	</update>
+	
+	<delete id="deleteItem">
+		delete from item where it_num = #{it_num}
+	</delete>
+	
+	<delete id="deleteProgram">
+		delete from hospital_program where hp_num=#{hp_num}
+	</delete>
+	
+	<delete id="deleteItemList">
+		delete from item_list where il_hp_num = #{hp_num}
+	</delete>
+	
+	<delete id="deleteSchedule">
+		delete from reservation_schedule where rs_num = #{rs_num};
+	</delete>
+	
+	<!-- 예약 -->
+	<insert id="insertResrvationBook">
+		insert into reservation(rv_me_id, rv_rvs_name, rv_rs_num)
+		values(#{rv.rv_me_id},#{rv.rv_rvs_name},#{rv.rv_rs_num})
+	</insert>
+	<select id="selectReservation" resultType="kr.kh.team3.model.vo.ReservationVO">
+		select * from reservation where rv_me_id = #{rv.rv_me_id} and rv_rs_num = #{rv.rv_rs_num} and rv_rvs_name = "예약완료"
+		
+	</select>
+	<insert id="insertPay">
+		insert into payment (pm_num,pm_type,pm_ps_name,pm_price,pm_rv_num,pm_ho_id)
+		value(#{pay.pm_num},#{pay.pm_type},"결제완료",#{pay.pm_price},#{pay.pm_rv_num},#{pay.pm_ho_id})
+	</insert>
+	
+	<select id="selectUserReserve" resultType="kr.kh.team3.model.vo.ReservationVO">
+			select * from reservation where rv_me_id = #{site_id} and rv_rs_num = #{rv_rs_num} and rv_rvs_name = "예약완료"
+	</select>
+	
+	<!-- 회원 예약 조회 -->
+	<resultMap type="kr.kh.team3.model.vo.ReservationVO" id="BookListMap">
+		<id property="rv_num" column="rv_num"/>
+		<result property="rv_rvs_name" column="rv_rvs_name"/>
+		<result property="rv_rs_num" column="rv_rs_num"/>
+		<result property="rv_me_id" column="rv_me_id"/>
+		<association property="ReservationScheduleVO" javaType="kr.kh.team3.model.vo.ReservationScheduleVO">
+			<id property="rs_num" column="rs_num"/>
+			<result property="rs_hp_num" column="rs_hp_num"/>
+			<result property="rs_date" column="rs_date"/>
+			<result property="rs_time" column="rs_time"/>
+			<result property="rs_max_person" column="rs_max_person"/>
+		</association>
+		<association property="hospitalProgram" javaType="kr.kh.team3.model.vo.HospitalProgramVO">
+			<id property="hp_num" column="hp_num"/>
+			<result property="hp_title" column="hp_title"/>
+			<result property="hp_payment" column="hp_payment"/>
+			<result property="hp_ho_id" column="hp_ho_id"/>
+			<result property="hp_hsl_num" column="hp_hsl_num"/>
+		</association>
+		<association property="hospital" javaType="kr.kh.team3.model.vo.HospitalVO">
+			<id property="ho_id" column="ho_id"/>
+			<result property="ho_name" column="ho_name"/>
+		</association>
+	</resultMap>
+	
+	<select id="selectBookList" resultMap="BookListMap">
+		select * from reservation
+		join reservation_schedule on rv_rs_num = rs_num
+		join hospital_program on rs_hp_num = hp_num
+		join hospital on ho_id = hp_ho_id
+		where rv_me_id = #{user.site_id}
+		<choose>
+			<when test='cri.type == "hoName"'>
+				and (ho_name like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "hoProgram"'>
+				and (hp_title like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+		order by rs_num desc
+		LIMIT #{cri.pageStart},#{cri.perPageNum}
+	</select>
+	
+	<select id="selectBookListCount" resultType="int">
+		select count(*) from reservation
+		join reservation_schedule on rv_rs_num = rs_num
+		join hospital_program on rs_hp_num = hp_num
+		join hospital on ho_id = hp_ho_id
+		where rv_me_id = #{user.site_id}
+		<choose>
+			<when test='cri.type == "hoName"'>
+				and (ho_name like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "hoProgram"'>
+				and (hp_title like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+	</select>
+	
+	<update id="updateRvRvsName">
+		update reservation set rv_rvs_name = "예약취소"
+		where rv_num = #{rv_num}
+	</update>
+	
+</mapper>

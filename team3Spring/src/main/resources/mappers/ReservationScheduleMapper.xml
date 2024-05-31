@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.ReservationScheduleDAO">
+	
+	<select id="selectRSTime" resultType="kr.kh.team3.model.vo.ReservationScheduleVO">
+		select * from reservation_schedule where rs_num = #{rs_num}
+	</select>
+	
+	<select id="selectRSTimeList" resultType="kr.kh.team3.model.vo.ReservationScheduleVO">
+		select * from reservation_schedule where rs_date = #{date} and rs_hp_num = #{hp_num}
+	</select>
+	
+	<select id="selectHospitalProgram" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where hp_num = #{hp_num};
+	</select>
+	
+	<!-- 예약 테이블 resultMap -->
+	<resultMap type="kr.kh.team3.model.vo.ReservationVO" id="ReservationMap">
+		<id property="rv_num" column="rv_num"/>
+		<result property="rv_rvs_name" column="rv_rvs_name"/>
+		<result property="rv_rs_num" column="rv_rs_num"/>
+		<result property="rv_me_id" column="rv_me_id"/>
+		<result property="rv_date" column="rv_date"/>
+		<collection property="ReservationScheduleVO" ofType="kr.kh.team3.model.vo.ReservationScheduleVO"
+			column="rv_rs_num" select="ReservationScheduleMap"/>
+		<collection property="MemberVO" ofType="kr.kh.team3.model.vo.MemberVO"
+			column="rv_me_id" select="selectMemberSchedule"/>
+	</resultMap>
+	
+	<select id="selectReservationList" resultMap="ReservationMap">
+		select * from reservation where rv_rs_num = #{rs_num}	
+	</select>
+		
+	<select id="selectReservationUpadateList" resultMap="ReservationMap">
+		select * from reservation where rv_rs_num = #{rs_num}	
+	</select>
+	
+	<select id="ReservationScheduleMap" resultMap="ReservationScheduleMap">
+		select * from reservation_schedule where rs_num = #{rv_rs_num}
+	</select>
+	
+	<select id="selectMemberSchedule" resultType="kr.kh.team3.model.vo.MemberVO">
+		select * from member where me_id = #{rv_me_id}
+	</select>
+	<!-- 예약 테이블 resultMap -->
+	
+	<select id="selectReservation" resultType="kr.kh.team3.model.vo.ReservationVO">
+		select * from reservation where rv_num = #{rv_num};
+	</select>
+	
+	<select id="reservationCount" resultType="int">
+		select count(*) from reservation where rv_rs_num = #{rs_num} and rv_rvs_name = "예약완료"
+	</select>
+	
+	<select id="programByMaxPerson" resultType="kr.kh.team3.model.vo.ReservationScheduleVO">
+		select * from reservation_schedule where rs_date = #{date} and rs_time = #{time};
+	</select>
+	
+	<select id="selectReservationList2" resultType="kr.kh.team3.model.vo.ReservationVO">
+		select * from reservation;
+	</select>
+	
+	<select id="selectReservationList22" resultMap="ReservationMap">
+		select * from reservation where rv_rs_num = #{rs_num}
+	</select>
+	
+	<select id="selectPayment" resultType="kr.kh.team3.model.vo.PaymentVO">
+		select * from payment where pm_rv_num = #{rv_num}
+	</select>
+	
+	<update id="updateUserChedule">
+		update reservation set rv_rs_num = #{rs_num} where rv_num = #{rv_num};
+	</update>
+	
+	<update id="updateUserScheduleState">
+		update reservation set rv_rvs_name = "예약취소" where rv_num = #{rv_num}
+	</update>
+	
+	<update id="updatePaymentStateChange">
+		update payment set pm_ps_name = "결제취소" where pm_num = #{pm_num};
+	</update>
+
+	
+	<!-- 예약 테이블 다중 resultMap -->
+		<resultMap type="kr.kh.team3.model.vo.ReservationScheduleVO" id="ReservationScheduleMap">
+			<id property="rs_num" column="rs_num"/>
+			<result property="rs_hp_num" column="rs_hp_num"/>
+			<result property="rs_date" column="rs_date"/>
+			<result property="rs_time" column="rs_time"/>
+			<result property="rs_max_person" column="rs_max_person"/>
+			<collection property="program" ofType="kr.kh.team3.model.vo.HospitalProgramVO"
+					column="rs_hp_num" select="selectReservationProgram"/>
+		</resultMap>
+		
+		<select id="selectReservationProgram" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+			select * from hospital_program where hp_num = #{rs_hp_num}
+		</select>
+	<!-- 예약 테이블 다중 resultMap -->
+	
+	<!-- 결제 태이블 resultMap -->
+		<resultMap type="kr.kh.team3.model.vo.PaymentVO" id="PaymentMap">
+			<id property="pm_num" column="pm_num"/>
+			<result property="pm_type" column="pm_type"/>
+			<result property="pm_ps_name" column="pm_ps_name"/>
+			<result property="pm_price" column="pm_price"/>
+			<result property="pm_rv_num" column="pm_rv_num"/>
+			<result property="pm_ho_id" column="pm_ho_id"/>
+			<collection property="hospital" ofType="kr.kh.team3.model.vo.HospitalVO"
+				column="pm_ho_id" select="selectPaymentByHospital"/>
+			<collection property="reservation" ofType="kr.kh.team3.model.vo.ReservationVO"
+				column="pm_rv_num" select="selectReservationList22"/>
+		</resultMap>
+		
+		<select id="selectRvNumByPaymentsTable" resultMap="PaymentMap">
+			select * from payment where pm_rv_num = #{rv_num}
+		</select>
+
+		<select id="selectPaymentByHospital" resultType="kr.kh.team3.model.vo.HospitalVO">
+			select * from hospital where ho_id = #{pm_ho_id}
+		</select>
+	<!-- 결제 태이블 resultMap -->
+	
+	
+</mapper>

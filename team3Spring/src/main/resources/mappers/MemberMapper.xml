@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.MemberDAO">
+	<!-- 신고 회원 리스트 -->
+	<resultMap type="SiteManagement" id="siteMap">
+		<id column="site_num" property="site_num"/>
+		<result column="site_la_num" property="site_la_num"/>
+		<result column="site_id" property="site_id"/>
+		<result column="site_phone" property="site_phone"/>
+		<result column="site_email" property="site_email"/>
+		<result column="site_authority" property="site_authority"/>
+		<collection property="member" ofType="MemberVO" 
+		column="site_id" select="siteMembergetId"/>
+		<collection property="report" ofType="ReportVO" 
+		column="site_num" select="siteMembergetReport"/>
+	</resultMap>
+	
+	<select id="siteMembergetReport" resultType="ReportVO">
+		select * from report where rp_target = #{site_num}
+	</select>
+	
+	<select id="selectMeRpList" resultMap="siteMap">
+		select * from site_management
+		where site_authority = "USER"
+		order by site_num
+		limit 4
+	</select>
+	
+	<select id="siteMembergetId" resultType="MemberVO">
+		select * from member where me_id = #{site_id}
+	</select>
+	
+	<resultMap type="ReportVO" id="reportMap">
+		<id column="rp_num" property="rp_num"/>
+		<result column="rp_target" property="rp_target"/>
+		<result column="rp_name" property="rp_name"/>
+		<result column="rp_table" property="rp_table"/>
+		<result column="rp_rs_name" property="rp_rs_name"/>
+		<result column="rp_site_num" property="rp_site_num"/>
+		<association property="siteManagement" javaType="SiteManagement">
+			<id column="site_num" property="site_num"/>
+			<result column="site_la_num" property="site_la_num"/>
+			<result column="site_id" property="site_id"/>
+			<result column="site_phone" property="site_phone"/>
+			<result column="site_email" property="site_email"/>
+			<result column="site_authority" property="site_authority"/>
+		</association>
+		<association property="member" javaType="MemberVO">
+			<id property="me_id" column="me_id"/>
+			<result property="me_name" column="me_name"/>
+			<result property="me_report_count" column="me_report_count"/>
+			<result property="me_stop_count" column="me_stop_count"/>
+			<result property="me_stop" column="me_stop"/>
+		</association>
+	</resultMap>
+	
+	<select id="selectReportMemberList" resultMap="reportMap">
+		select * from report
+		join site_management on site_num = rp_target
+		join member on me_id = site_id
+		where rp_table = "member"
+		and site_authority = "USER"
+		order by site_num
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectReportMemberTotalCount" resultType="int">
+		select count(*) from report
+		join site_management on site_num = rp_target
+		join member on me_id = site_id
+		where rp_table = "member"
+		and site_authority = "USER"
+		order by site_num
+	</select>
+	
+	<select id="selectSiteMember" resultType="SiteManagement">
+		select * from site_management where site_num = #{rp_target}
+	</select>
+	
+	
+	<select id="getMySubject" resultType="kr.kh.team3.model.vo.HospitalDetailVO">
+		select * from hospital_detail
+	</select>
+	
+	<select id="selectMyLand" resultType="kr.kh.team3.model.vo.LandVO">
+		select * from land where la_num = #{num}
+	</select>
+
+	<!-- 지역설정 쿼리문 작성 -->
+	<insert id="insertLand">
+		insert into land(la_sd_num,la_sgg_num,la_emd_num)
+		values(#{la.la_sd_num},#{la.la_sgg_num},#{la.la_emd_num})
+	</insert>
+	<select id="selectLand" resultType="kr.kh.team3.model.vo.LandVO">
+		select 
+			* 
+		from 
+			land where la_sd_num = #{la.la_sd_num}
+		and 
+			la_sgg_num = #{la.la_sgg_num}
+		and
+			la_emd_num = #{la.la_emd_num}
+	</select>
+
+	<select id="getMyLand" resultType="kr.kh.team3.model.vo.LandVO">
+		select * from land where
+		la_num = #{me.me_la_num}
+	</select>
+
+	<select id="selectSdName" resultType="String">
+		select sd_name from si_do
+		where sd_num = #{la.la_sd_num}
+	</select>
+	<select id="selectSggName" resultType="String">
+		select sgg_name from
+		si_goon_gu where sgg_num = #{la.la_sgg_num}
+	</select>
+	<select id="selectEmdName" resultType="String">
+		select emd_name from
+		eup_myeon_dong where emd_num = #{la.la_emd_num}
+	</select>
+
+	<update id="updateMemberLand">
+		UPDATE member
+		SET me_la_num = #{la.la_num}
+		WHERE
+		me_id = #{me.me_id}
+	</update>
+	<update id="updateSiteLand">
+		UPDATE site_management
+		SET site_la_num = #{la.la_num}
+		WHERE site_id = #{site.site_id}
+	</update>
+	
+	<update id="updateSubject">
+		update member 
+		set me_hs_num = #{num}
+		where me_id = #{id}
+	</update>
+
+	<select id="selectSubject" resultType="kr.kh.team3.model.vo.HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{me.me_hs_num}
+	</select>
+
+	<!-- 회원가입 -->
+	<insert id="insertMember">
+		insert into
+		member(me_hs_num,me_id,me_pw,me_name,me_gender,me_phone,me_email,me_authority,me_ms_state,me_la_num)
+		values(#{me.me_hs_num},#{me.me_id},#{me.me_pw},#{me.me_name},#{me.me_gender},#{me.me_phone},#{me.me_email},"USER","이용중",#{la.la_num})
+	</insert>
+
+	<insert id="insertSiteMember">
+		insert into
+		site_management(site_la_num,site_id,site_email,site_phone,site_authority)
+		value(#{la.la_num},#{si.site_id},#{si.site_email},#{si.site_phone},"USER")
+	</insert>
+
+	<select id="selectSiDo" resultType="kr.kh.team3.model.vo.SiDoVO">
+		select * from si_do
+	</select>
+
+	<select id="selectSgg"
+		resultType="kr.kh.team3.model.vo.SiGoonGuVO">
+		select * from si_goon_gu where sgg_sd_num = #{sd_num}
+	</select>
+
+	<select id="selectEmd"
+		resultType="kr.kh.team3.model.vo.EupMyeonDongVO">
+		select * from eup_myeon_dong where emd_sgg_num = #{sgg_num}
+	</select>
+
+	<!-- 로그인 -->
+	<select id="selectMember"
+		resultType="kr.kh.team3.model.vo.MemberVO">
+		SELECT * FROM member
+		WHERE me_id = #{me_id}
+	</select>
+	<select id="selectSite"
+		resultType="kr.kh.team3.model.vo.SiteManagement">
+		SELECT * FROM site_management
+		WHERE site_id = #{me_id}
+	</select>
+	<update id="updateLoginFail">
+		UPDATE member
+		SET me_fail = me_fail + 1
+		WHERE me_id =
+		#{me_id}
+	</update>
+	<update id="updateLoginFailZero">
+		UPDATE member
+		SET me_fail = 0
+		WHERE me_id = #{me_id}
+	</update>
+
+	<select id="selectMemberEmail"
+		resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_email = #{email}
+	</select>
+
+	<select id="selectMemberPhone"
+		resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_phone = #{phone}
+	</select>
+
+	<!-- 관리자 - 회원 관리(양선진) -->
+	<resultMap type="kr.kh.team3.model.vo.MemberVO"
+		id="MemberMap">
+		<id property="me_id" column="me_id" />
+		<result property="me_name" column="me_name" />
+		<result property="me_gender" column="me_gender" />
+		<result property="me_phone" column="me_phone" />
+		<result property="me_email" column="me_email" />
+		<result property="me_address" column="me_address" />
+		<result property="me_hs_num" column="me_hs_num" />
+		<result property="me_la_num" column="me_la_num"/>
+		<collection property="hospitalSubject"
+			ofType="HospitalSubjectVO" column="me_hs_num"
+			select="selectHospitalSubject" />
+		<collection property="land" ofType="LandVO" 
+		column="me_la_num" select="selectMeLaNum" />
+	</resultMap>
+	
+	<select id="selectMeLaNum" resultMap="landMap">
+		select * from land where la_num = #{me_la_num}
+	</select>
+	
+	<resultMap type="LandVO" id="landMap">
+		<id property="la_num" column="la_num"/>
+		<result property="la_sd_num" column="la_sd_num"/>
+		<result property="la_sgg_num" column="la_sgg_num"/>
+		<result property="la_emd_num" column="la_emd_num"/>
+		<collection property="sido" ofType="SiDoVO" 
+		column="la_sd_num" select="selectLaSdNum"/>
+		<collection property="sgg" ofType="SiGoonGuVO" 
+		column="la_sgg_num" select="selectLaSggNum"/>
+		<collection property="emd" ofType="EupMyeonDongVO" 
+		column="la_emd_num" select="selectLaEmdNum"/>
+	</resultMap>
+	
+	<select id="selectLaSdNum" resultType="SiDoVO">
+		select sd_name from si_do where sd_num = #{la_sd_num}
+	</select>
+	
+	<select id="selectLaSggNum" resultType="SiGoonGuVO">
+		select sgg_name from si_goon_gu where sgg_num = #{la_sgg_num}
+	</select>
+	
+	<select id="selectLaEmdNum" resultType="EupMyeonDongVO">
+		select emd_name from eup_myeon_dong where emd_num = #{la_emd_num}
+	</select>
+	
+	<select id="selectMemberLand" resultType="MemberVO">
+		select me_la_num from member
+	</select>
+	
+	
+
+	<select id="selectHospitalSubject"
+		resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{me_hs_num}
+	</select>
+
+	<select id="selectMemberList" resultMap="MemberMap">
+		select * from member
+		where me_authority = "USER"
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+
+	<select id="selectMemberTotalCount" resultType="int">
+		select count(*)
+		from member where me_authority = "USER"
+	</select>
+
+	<!-- 삭제 버튼 -->
+	<delete id="deleteMember">
+		delete from member where me_id = #{me_id}
+	</delete>
+		
+	<delete id="deleteMyInfo">
+		delete member,site_management 
+		from member 
+		join site_management 
+		on me_id = site_id 
+		where me_id = #{id}
+	</delete>
+
+	<select id="selectSiteMemberId" resultType="SiteManagement">
+		select * from
+		site_management where site_id = #{site_id}
+	</select>
+
+	<delete id="deleteSiteManagement">
+		delete from site_management where site_id =
+		#{site_id}
+	</delete>
+
+	<!-- 정지 버튼 -->
+	<update id="updateStopMember">
+		update member set
+		me_stop = DATE_ADD(NOW(), INTERVAL #{rp_rs_name} DAY),
+		me_ms_state = "기간정지"
+		where me_id = #{me_id}
+	</update>
+
+	<update id="updatePlusStopMember">
+		update member set
+		me_stop = DATE_ADD(me_stop, INTERVAL #{rp_rs_name} DAY),
+		me_ms_state = "기간정지"
+		where me_id = #{me_id}
+	</update>
+
+	<select id="getMemberInfo" resultType="MemberVO">
+		select * from member where
+		me_id = #{id}
+	</select>
+
+	<update id="updateName">
+		update member set me_name = #{me.me_name} where me_id
+		=#{me.me_id}
+	</update>
+	<update id="updatePhone">
+		update member set me_phone = #{me.me_phone} where
+		me_id =#{me.me_id}
+	</update>
+	<update id="updateEmail">
+		update member set me_email = #{me.me_email} where
+		me_id =#{me.me_id}
+	</update>
+	<update id="updateJob">
+		update member set me_job = #{me.me_job} where me_id
+		=#{me.me_id}
+	</update>
+	<update id="updatePw">
+		update member set me_pw = #{pw} where me_id =#{id}
+	</update>
+	
+	<!-- 병원 상세 페이지 북마크 : 양선진 -->
+	<insert id="insertBookmark">
+		insert into bookmark(bmk_ho_id, bmk_me_id) 
+		values (#{hd_ho_id}, #{me.me_id})
+	</insert>
+	
+	<select id="selectBookmark" resultType="BookmarkVO">
+		select * from bookmark 
+		where bmk_me_id = #{me_id} and bmk_ho_id = #{hd_ho_id} limit 1
+	</select>
+
+	<delete id="deleteBookmark">
+		delete from bookmark 
+		where bmk_me_id = #{bmk_me_id} and bmk_ho_id = #{bmk_ho_id}
+	</delete>
+	
+	<select id="selectDetailBookmark" resultType="BookmarkVO">
+		select * from bookmark 
+		where bmk_me_id = #{me_id} and bmk_ho_id = #{hd_ho_id} limit 1
+	</select>
+		
+	<select id="selectUserArrList" resultType="MemberVO">
+		select * from member
+	</select>	
+		
+	<select id="selectMemberArrList" resultType="SiteManagement">
+		select * from site_management
+	</select>	
+	
+	<update id="updateRpCount">
+		UPDATE member
+		SET me_report_count = me_report_count + 1
+		WHERE me_id = #{me_id}
+	</update>
+	
+	<select id="selectReportMemberTarget" resultType="SiteManagement">
+		select * from site_management where site_num = #{reUser}
+	</select>
+	
+	<update id="updateMemberRpCount">
+		update member set me_report_count = me_report_count +1
+		where me_id = #{id}
+	</update>
+	
+	<select id="selectTarget" resultType="int">
+		select site_num from site_management where site_id =#{id}
+	</select>
+	
+	<select id="selectReservationId" resultType="int">
+		select count(*) from reservation 
+		join payment on pm_rv_num = rv_num
+		where rv_rvs_name = "예약완료" and pm_ho_id = #{ho_id} and rv_me_id = #{me_id}
+	</select>
+	
+	<select id="getMemberReservation" resultType="int">
+		select count(*)
+		from reservation join payment
+		on pm_rv_num = rv_num
+		where rv_me_id = #{me_id}
+		and pm_ho_id = #{ho.hd_ho_id}
+		and rv_rvs_name = "예약완료"
+	</select>
+
+	<select id="selectReviews" resultType="int">
+		select count(*) from review where vw_me_id = #{id} and vw_hd_num = #{ho.hd_num}
+	</select>
+	
+	<select id="selectMyIddd" resultType="SiteManagement">
+		select * from site_management where site_id = #{id}
+	</select>
+	
+	<!-- 자동로그인 cookie -->
+	<update id="updateMemberCookie">
+  		UPDATE site_management SET
+  		site_cookie = #{user.site_cookie},
+  		site_cookie_limit = #{user.site_cookie_limit}
+  		WHERE site_id = #{user.site_id}
+  	</update>
+  	
+  	<select id="selectMemberByCookie" resultType="SiteManagement">
+  		<!-- 내부 코드를 순수하게 쿼리로 인식 -->
+  		<![CDATA[ 
+  		SELECT * FROM site_management
+  		WHERE site_cookie = #{session_Id}
+  			and site_cookie_limit >= now()
+  		]]>
+  	</select>
+  	
+  	<select id="selectUser" resultType="SiteManagement">
+  		select * from site_management where site_id = #{id}
+  	</select>
+  	
+  	<update id="updatePassword">
+  		update member set me_pw = #{pw}, me_fail = 0 where me_id = #{id}
+  	</update>
+  	
+  	<select id="selectUserFindId" resultType="SiteManagement">
+  		select * from site_management where site_email = #{email} and site_phone = #{phone}
+  	</select>
+  	
+  	<select id="selectSiteUser" resultType="SiteManagement">
+  		select site_id from site_management where site_email = #{email}
+  	</select>
+</mapper>

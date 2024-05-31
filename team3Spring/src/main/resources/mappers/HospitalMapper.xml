@@ -1,0 +1,864 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.HospitalDAO">
+	<select id="selectMyAreaHospitalList" resultMap="hospitalMap">
+		select * from hospital where ho_la_num = #{n} limit 4
+	</select>
+	
+	<select id="selectHospitalSubjectListHome" resultType="HospitalSubjectVO">
+		select * from hospital_subject order by hs_title limit 13
+	</select>
+	
+	<select id="selectHoSubListAll" resultType="HospitalSubjectVO">
+		select * from hospital_subject order by hs_title
+	</select>
+
+
+	<resultMap type="ReportVO" id="reportMap">
+		<id column="rp_num" property="rp_num"/>
+		<result column="rp_target" property="rp_target"/>
+		<result column="rp_name" property="rp_name"/>
+		<result column="rp_table" property="rp_table"/>
+		<result column="rp_rs_name" property="rp_rs_name"/>
+		<result column="rp_site_num" property="rp_site_num"/>
+		<association property="siteManagement" javaType="kr.kh.team3.model.vo.SiteManagement">
+			<id column="site_num" property="site_num"/>
+			<result column="site_la_num" property="site_la_num"/>
+			<result column="site_id" property="site_id"/>
+			<result column="site_phone" property="site_phone"/>
+			<result column="site_email" property="site_email"/>
+			<result column="site_authority" property="site_authority"/>
+		</association>
+		<association property="hospital" javaType="kr.kh.team3.model.vo.HospitalVO">
+			<id property="ho_id" column="ho_id"/>
+			<result property="ho_name" column="ho_name"/>
+			<result property="ho_num" column="ho_num"/>
+			<result property="ho_report_count" column="ho_report_count"/>
+			<result property="ho_stop_count" column="ho_stop_count"/>
+			<result property="ho_stop" column="ho_stop"/>
+		</association>
+	</resultMap>
+	
+<!-- 	<select id="siteHospitalgetId" resultType="HospitalVO">
+		select * from hospital where ho_id = #{site_id}
+	</select>
+	<select id="siteHospitalgetReport" resultType="kr.kh.team3.model.vo.ReportVO">
+		select * from report where rp_target = #{site_num}
+	</select> -->
+	<select id="selectReportHospitalList" resultMap="reportMap">
+		select * from report
+		join site_management on site_num = rp_target
+		join hospital on ho_id = site_id
+		where rp_table = "member"
+		and site_authority = "MANAGER"
+		order by site_num
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectRHTotalCount" resultType="int">
+		select count(*) from report
+		join site_management on site_num = rp_target
+		join hospital on ho_id = site_id
+		where rp_table = "member"
+		and site_authority = "MANAGER"
+		order by site_num
+	</select>
+	<!-- 여기까지 세트 -->
+	
+	
+	<select id="selectHospitalArrList" resultType="HospitalVO">
+		select * from hospital
+	
+	</select>
+
+	<resultMap type="HospitalVO" id="bookmarkMap">
+      <id column="ho_id" property="ho_id"/>
+      <result column="ho_hs_num" property="ho_hs_num"/>
+      <result column="ho_pw" property="ho_pw"/>
+      <result column="ho_email" property="ho_email"/>
+      <result column="ho_name" property="ho_name"/>
+      <result column="ho_ceo" property="ho_ceo"/>
+      <result column="ho_num" property="ho_num"/>
+      <result column="ho_address" property="ho_address"/>
+      <result column="ho_phone" property="ho_phone"/>
+      <result column="ho_authority" property="ho_authority"/>
+      <result column="ho_ms_state" property="ho_ms_state"/>
+      <result column="ho_fail" property="ho_fail"/>
+      <result column="ho_stop" property="ho_stop"/>
+      <result column="ho_report_count" property="ho_report_count"/>
+      <result column="ho_stop_count" property="ho_stop_count"/>
+      <result column="ho_la_num" property="ho_la_num"/>
+      <result column="ho_cookie" property="ho_cookie"/>
+      <result column="ho_cookie_limit" property="ho_cookie_limit"/>
+      <collection property="bookmark"
+         ofType="BookmarkVO" column="ho_id"
+         select="selectBookmarkBmk"/>
+      <collection property="hospital_detail"
+         ofType="HospitalDetailVO" column="ho_id"
+         select="selectHoDeBmk"/>
+      <collection property="hospital_subject"
+         ofType="HospitalSubjectVO" column="ho_hs_num"
+         select="selectHoSubBmk"/>
+   </resultMap>
+   <select id="selectBookmarkBmk" resultType="BookmarkVO">
+      select * from bookmark where bmk_ho_id = #{ho_id}
+   </select>
+   <select id="selectHoDeBmk" resultType="HospitalDetailVO">
+      select * from hospital_detail where hd_ho_id = #{ho_id}
+   </select>
+
+   <select id="selectHoSubBmk" resultType="HospitalSubjectVO">
+      select * from hospital_subject where hs_num = #{ho_hs_num}
+   </select>
+	
+
+	<resultMap type="HsListVO" id="HsListMap">
+		<id column="hsl_num" property="hsl_num"/>
+		<result column="hsl_hs_num" property="hsl_hs_num"/>
+		<result column="hsl_ho_id" property="hsl_ho_id"/>
+		<collection property="hospital" ofType="HospitalVO" 
+		column="hsl_ho_id" select="selectHospitalSub"/>
+		<collection property="hospital_subject" ofType="HospitalSubjectVO" 
+		column="hsl_hs_num" select="selectHoSubMap"/>
+		<collection property="hospital_detail" ofType="HospitalDetailVO" 
+		column="hsl_ho_id" select="selectHoDeMap"/>
+	</resultMap>
+	
+	<select id="selectHoDeMap" resultType="HospitalDetailVO">
+		select * from hospital_detail where hd_ho_id = #{hsl_ho_id}
+	</select>
+	<select id="selectHospitalSub" resultType="HospitalVO">
+		select * from hospital where ho_id = #{hsl_ho_id}
+	</select>
+	<select id="selectHoSubMap" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{hsl_hs_num}
+	</select>
+	<select id="getSubHoList" resultMap="HsListMap">
+		select * from hs_list where hsl_hs_num = #{me.me_hs_num} 
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	<select id="getTotalSubHoList" resultType="int">
+		select count(*) from hs_list where hsl_hs_num = #{me.me_hs_num} 
+	</select>
+	
+	<select id="selectHospitalAll" resultMap="hospitalMap2">
+		select * from hospital
+		where ho_la_num = #{la.la_num}
+		and ho_name like concat('%', #{cri.search}, '%')
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectHospitalAllCount" resultType="int">
+		select count(*) from hospital
+		where ho_la_num = #{la.la_num}
+		and ho_name like concat('%', #{cri.search}, '%')
+	</select>
+	
+	<resultMap type="HospitalVO" id="hospitalMap2">
+		<id column="ho_id" property="ho_id"/>
+		<result column="ho_ms_state" property="ho_ms_state"/>
+		<result column="ho_hs_num" property="ho_hs_num"/>
+		<result column="ho_pw" property="ho_pw"/>
+		<result column="ho_name" property="ho_name"/>
+		<result column="ho_ceo" property="ho_ceo"/>
+		<result column="ho_num" property="ho_num"/>
+		<result column="ho_address" property="ho_address"/>
+		<result column="ho_phone" property="ho_phone"/>
+		<result column="ho_authority" property="ho_authority"/>
+		<result column="ho_cookie" property="ho_cookie"/>
+		<result column="ho_cookie_limit" property="ho_cookie_limit"/>
+		<result column="ho_fail" property="ho_fail"/>
+		<result column="ho_email" property="ho_email"/>
+		<result column="ho_report_count" property="ho_report_count"/>
+		<result column="ho_stop" property="ho_stop"/>
+		<result column="ho_stop_count" property="ho_stop_count"/>
+		<result column="ho_la_num" property="ho_la_num"/>
+		<collection property="hospital_detail"
+			ofType="HospitalDetailVO" column="ho_id"
+			select="selectHospitalDetail"/>
+		<collection property="hs" ofType="HospitalSubjectVO" column="ho_hs_num"
+			select="selectHsMap"/>
+			<collection property="land" ofType="LandVO" 
+		column="ho_la_num" select="selectHoLaNum" />
+	</resultMap>
+	
+	<select id="selectHsMap" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{ho_hs_num}
+	</select> 
+	
+	<resultMap type="HospitalVO" id="hospitalMap">
+		<id column="ho_id" property="ho_id"/>
+		<result column="ho_ms_state" property="ho_ms_state"/>
+		<result column="ho_hs_num" property="ho_hs_num"/>
+		<result column="ho_pw" property="ho_pw"/>
+		<result column="ho_name" property="ho_name"/>
+		<result column="ho_ceo" property="ho_ceo"/>
+		<result column="ho_num" property="ho_num"/>
+		<result column="ho_address" property="ho_address"/>
+		<result column="ho_phone" property="ho_phone"/>
+		<result column="ho_authority" property="ho_authority"/>
+		<result column="ho_cookie" property="ho_cookie"/>
+		<result column="ho_cookie_limit" property="ho_cookie_limit"/>
+		<result column="ho_fail" property="ho_fail"/>
+		<result column="ho_email" property="ho_email"/>
+		<result column="ho_report_count" property="ho_report_count"/>
+		<result column="ho_stop" property="ho_stop"/>
+		<result column="ho_stop_count" property="ho_stop_count"/>
+		<result column="ho_la_num" property="ho_la_num"/>
+		<collection property="hospital_detail"
+			ofType="HospitalDetailVO" column="ho_id"
+			select="selectHospitalDetail"/>
+		<collection property="hospital_subject" ofType="HospitalSubjectVO" column="ho_hs_num"
+			select="selectHospitalSubject"/>
+			<collection property="land" ofType="LandVO" 
+		column="ho_la_num" select="selectHoLaNum" />
+		<collection property="hs" ofType="HospitalSubjectVO" column="ho_hs_num"
+			select="selectHsList2"/>
+			<collection property="land" ofType="LandVO" 
+		column="ho_la_num" select="selectHoLaNum" />
+	</resultMap>
+	
+	<select id="selectHsList2" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{ho_hs_num}
+	</select>
+	<select id="selectHoLaNum" resultMap="landMapp">
+		select * from land where la_num = #{ho_la_num}
+	</select>
+	
+	<resultMap type="LandVO" id="landMapp">
+		<id property="la_num" column="la_num"/>
+		<result property="la_sd_num" column="la_sd_num"/>
+		<result property="la_sgg_num" column="la_sgg_num"/>
+		<result property="la_emd_num" column="la_emd_num"/>
+		<collection property="sido" ofType="SiDoVO" 
+		column="la_sd_num" select="selectLaSdNum"/>
+		<collection property="sgg" ofType="SiGoonGuVO" 
+		column="la_sgg_num" select="selectLaSggNum"/>
+		<collection property="emd" ofType="EupMyeonDongVO" 
+		column="la_emd_num" select="selectLaEmdNum"/>
+	</resultMap>
+	
+	<select id="selectLaSdNum" resultType="SiDoVO">
+		select sd_name from si_do where sd_num = #{la_sd_num}
+	</select>
+	
+	<select id="selectLaSggNum" resultType="SiGoonGuVO">
+		select sgg_name from si_goon_gu where sgg_num = #{la_sgg_num}
+	</select>
+	
+	<select id="selectLaEmdNum" resultType="EupMyeonDongVO">
+		select emd_name from eup_myeon_dong where emd_num = #{la_emd_num}
+	</select>
+	
+	<select id="selectMemberLand" resultType="HospitalVO">
+		select ho_la_num from hospital
+	</select>
+	
+	
+	
+	
+	
+	<select id="selectHospitalDetail" resultType="HospitalDetailVO">
+		select * from hospital_detail where hd_ho_id = #{ho_id}
+	</select>
+	
+	<select id="selectHospitalSubject" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{ho_hs_num}
+	</select>
+	
+	<select id="selectBmkHospital" resultType="HospitalVO">
+		select * from hospital where ho_id = #{bmk_ho_id}
+	</select>
+	
+	<select id="getHospitalList" resultMap="HsListMap">
+	 	select * 
+		from hs_list 
+		join hospital on ho_id = hsl_ho_id 
+		where hsl_hs_num= #{hs_num} 
+		    and ho_la_num = #{la.la_num}
+		    and ho_name like concat('%', #{cri.search}, '%')
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="getHospitalListCount" resultType="int">
+	 	select count(*) 
+		from hs_list 
+		join hospital on ho_id = hsl_ho_id 
+		where hsl_hs_num= #{hs_num} 
+		    and ho_la_num = #{la.la_num}
+		    and ho_name like concat('%', #{cri.search}, '%')
+	</select>
+	
+<!-- 	<select id="selectBmkList" resultMap="bookmarkMap">
+		select * from bookmark where bmk_me_id = #{user.site_id}
+		limit #{cri.pageStart}, #{cri.perPageNum};
+	</select> -->
+	<select id="selectBmkList" resultMap="bookmarkMap">
+	    select * from hospital
+	    join bookmark on ho_id = bmk_ho_id
+	    join hospital_detail on ho_id = hd_ho_id
+	    join hospital_subject on hs_num = ho_hs_num
+	    where bmk_me_id = #{user.site_id}
+	    limit #{cri.pageStart}, #{cri.perPageNum};
+    </select>
+	
+	<select id="selectBmkListCount" resultType="int">
+		select count(*) from bookmark where bmk_me_id = #{user.site_id}
+	</select>
+	
+	
+	<select id="getArrHospital" resultType="HospitalVO">
+	 	select * from hospital where ho_la_num = #{us.site_la_num}
+	</select>
+	
+	
+	
+	<select id="getHospital" resultType="HospitalVO">
+	 	select * from hospital where ho_id = #{ho_id} and ho_la_num = #{la_num}
+	</select>
+	
+	<select id="getLand" resultType="kr.kh.team3.model.vo.LandVO">
+		select * from land where la_emd_num = #{num}
+	</select>
+
+	<insert id="insertHospital">
+		insert into hospital(ho_id, ho_pw, ho_email, ho_name, ho_ceo, ho_hs_num, ho_num,
+						 ho_address, ho_phone, ho_authority, ho_ms_state, ho_la_num) 
+		values(#{ho.ho_id}, #{ho.ho_pw}, #{ho.ho_email}, #{ho.ho_name}, #{ho.ho_ceo}, 
+				#{ho.ho_hs_num}, #{ho.ho_num}, #{ho.ho_address}, #{ho.ho_phone},"MANAGER","가입대기", #{la.la_num})
+	</insert>
+	
+	<insert id="insertSiteHospital">
+		insert into
+		site_management(site_la_num,site_id,site_email,site_phone,site_authority)
+		value(#{la.la_num},#{si.site_id},#{si.site_email},#{si.site_phone},"MANAGER")
+	</insert>
+	
+	<insert id="insertLand">
+		insert into land(la_sd_num,la_sgg_num,la_emd_num)
+		values(#{la.la_sd_num},#{la.la_sgg_num},#{la.la_emd_num})
+	</insert>
+	
+	<select id="selectHospitalId" resultType="HospitalVO">
+		select * from hospital where ho_id = #{ho_id}
+	</select>
+	
+	<select id="selectLand" resultType="kr.kh.team3.model.vo.LandVO">
+		select 
+			* 
+		from 
+			land where la_sd_num = #{la.la_sd_num}
+		and 
+			la_sgg_num = #{la.la_sgg_num}
+		and
+			la_emd_num = #{la.la_emd_num}
+	</select>
+	
+	<!-- 정경호 : 과목 ㄱㄴㄷㄹ순으로 정렬을 위해 order by hs_title 추가 -->
+	<select id="selectHospitalSubjectList" resultType="HospitalSubjectVO">
+		select * from hospital_subject order by hs_num
+	</select>
+	
+	<!-- 로그인 -->
+	<select id="selectHospital" resultType="kr.kh.team3.model.vo.HospitalVO">
+		SELECT * FROM hospital
+		WHERE ho_id = #{ho_id}
+	</select>
+	
+	
+	
+	<select id="selectHospitalPage" resultMap="hospitalMap">
+		SELECT * FROM hospital
+		WHERE ho_id = #{id}
+	</select>
+	
+	<select id="selectSite" resultType="kr.kh.team3.model.vo.SiteManagement">
+		SELECT * FROM site_management
+		WHERE site_id = #{ho_id}
+	</select>
+	
+	<select id="selectSiDoList" resultType="SiDoVO">
+		select * from si_do
+	</select>
+	
+	<select id="selectSggList" resultType="SiGoonGuVO">
+		select * from si_goon_gu
+	</select>
+	
+	<select id="selectEmdList" resultType="EupMyeonDongVO">
+		select * from eup_myeon_dong
+	</select>
+	
+	<update id="updateLoginFail">
+		UPDATE hospital
+		SET ho_fail = ho_fail + 1
+		WHERE ho_id = #{ho_id}
+	</update>
+	
+	<update id="updateLoginFailZero">
+		UPDATE hospital
+		SET ho_fail = 0
+		WHERE ho_id = #{ho_id}
+	</update>
+	
+	<!-- 사이트 매니지먼트 아이디, 이메일, 폰 중복 체크 -->
+	<select id="selectSiteId" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_id = #{site_id}
+	</select>
+	
+	<select id="selectHospitalEmail" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_email = #{site_email}
+	</select>
+	
+	<select id="selectHospitalPhone" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_phone = #{site_phone}
+	</select>
+	
+	<!-- 정경호 이용중인 병원만 조회하는 쿼리 -->
+	<select id="hospitalList" resultMap="hospitalMap">
+		select * from hospital where ho_ms_state = "이용중"
+		order by ho_id
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+		
+	<select id="selectHospitalCount" resultType="int">
+		select count(*) from hospital where ho_ms_state = "이용중"
+	</select>
+	<!-- 정경호 끝 -->
+	
+	<!-- 관리자 병원 관리 -->
+	<select id="selectWaitHoList" resultType="kr.kh.team3.model.vo.HospitalVO">
+		select * from hospital
+		where ho_ms_state = "가입대기"
+		order by ho_id
+		limit 4
+	</select>
+	
+	<select id="selectRpHoList" resultMap="reportMap">
+		select * from report
+		join site_management on site_num = rp_target
+		join hospital on ho_id = site_id
+		where rp_table = "member"
+		and site_authority = "MANAGER"
+		order by site_num
+		limit 4
+	</select>
+	
+	<select id="selectWaitHospitalList" resultType="kr.kh.team3.model.vo.HospitalVO">
+		select * from hospital
+		where ho_ms_state = "가입대기"
+		order by ho_id
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectWHTotalCount" resultType="int">
+		select count(*) from hospital where ho_ms_state = "가입대기"
+	</select>
+	
+	<update id="updateWaitOk">
+		update hospital
+		set ho_ms_state = "이용중"
+		where ho_id = #{ho_id}
+	</update>
+	
+	<delete id="updateWaitNo">
+		delete from hospital
+		where ho_id = #{ho_id}
+	</delete>
+	
+	<delete id="deleteHospital">
+		delete from hospital
+		where ho_id = #{ho_id}
+	</delete>
+	
+	<delete id="deleteSite">
+		delete from site_management
+		where site_id = #{ho_id}
+	</delete>
+	
+
+	<select id="selectReportSiteHospitalList" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_num = #{rp_target}
+	</select>
+
+	
+	<select id="selectHospitalReportTarget" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_num = #{num}
+	</select>
+	
+	
+	
+	<update id="updateHospitalStop">
+		update hospital set
+		ho_stop = DATE_ADD(NOW(), INTERVAL #{rp_rs_name} DAY),
+		ho_ms_state = "기간정지"
+		where ho_id = #{ho_id}
+	</update>
+	
+	<update id="updateHospitalStopPlus">
+		update hospital set
+		ho_stop = DATE_ADD(ho_stop, INTERVAL #{rp_rs_name} DAY),
+		ho_ms_state = "기간정지"
+		where ho_id = #{ho_id}
+	</update>
+	
+	<update id="updateHoStopCancel">
+		update hospital set
+		ho_stop = null,
+		ho_ms_state = "이용중"
+		where ho_id = #{ho_id}
+	</update>
+	
+	<!-- 병원 페이지 : 선진, 민석 -->
+	<insert id="insertHoDetail">
+		insert into hospital_detail(hd_ho_id, hd_info, hd_time, 
+		hd_park, hd_announce, hd_etc, hd_subject_detail)
+		values (#{ho.ho_id}, #{hd.hd_info}, #{hd.hd_time}, 
+		#{hd.hd_park}, #{hd.hd_announce}, #{hd.hd_etc}, 
+		#{hd.hd_subject_detail})
+	</insert>
+	
+	<update id="updateHoDetail">
+		update hospital_detail
+		set hd_info = #{hd.hd_info}, hd_time = #{hd.hd_time}, 
+		hd_park = #{hd.hd_park}, hd_announce = #{hd.hd_announce}, 
+		hd_etc = #{hd.hd_etc}, hd_subject_detail = #{hd.hd_subject_detail}
+		where hd_ho_id = #{ho_id}
+	</update>
+
+	<insert id="insertSubjects">
+		insert into hs_list(hsl_hs_num, hsl_ho_id) 
+		values (#{hsl_hs_num}, #{ho.ho_id})
+	</insert>
+	
+	<update id="updateSubjects">
+		update hs_list
+		set hsl_hs_num = #{hsl_hs_num}
+		where hsl_ho_id = #{ho.ho_id}
+	</update>
+	
+
+	<resultMap type="HospitalDetailVO" id="hdMap">
+		<result property="hd_num" column="hd_num"/>
+		<result property="hd_ho_id" column="hd_ho_id"/>
+		<result property="hd_info" column="hd_info"/>
+		<result property="hd_time" column="hd_time"/>
+		<result property="hd_park" column="hd_park"/>
+		<result property="hd_announce" column="hd_announce"/>
+		<result property="hd_etc" column="hd_etc"/>
+		<result property="hd_subject_detail" column="hd_subject_detail"/>
+		<collection property="hospital" ofType="HospitalVO"
+		column="hd_ho_id" select="selectHosId"/>
+		<collection property="hsList" ofType="HsListVO" 
+		column="hd_ho_id" select="selectHsList"/>
+		<collection property="subject" ofType="HospitalSubjectVO"
+		column="hd_num" select="selectDeSubject"/>		
+	</resultMap>
+	
+	<select id="selectHosId" resultType="HospitalVO">
+		select * from hospital where ho_id = #{hd_ho_id}
+	</select>
+	
+	<select id="selectHsList" resultType="HsListVO">
+		select * 
+		from hs_list 
+		join hospital_subject on hs_num = hsl_hs_num 
+		where hsl_ho_id = #{hd_ho_id}
+	</select>
+	
+	<select id="selectDeSubject" resultType="HospitalSubjectVO">
+		select hs_title from hospital_subject where hs_num = #{hd_num}
+	</select>
+	
+	<select id="selectDetail" resultMap="hdMap">
+		select * from hospital_detail where hd_ho_id = #{ho_id}
+	</select>
+	
+	<resultMap type="HsListVO" id="HsMap">
+		<id column="hsl_num" property="hsl_num"/>
+		<result column="hsl_hs_num" property="hsl_hs_num"/>
+		<result column="hsl_ho_id" property="hsl_ho_id"/>
+		<collection property="hospital_subject" ofType="HospitalSubjectVO"
+		column="hsl_hs_num" select="selectHsTitle"/>
+	</resultMap>
+	
+	<select id="selectHsTitle" resultType="HospitalSubjectVO">
+		select hs_title from hospital_subject where hs_num = #{hsl_hs_num}
+	</select>
+	
+	<select id="selectDetailSubject" resultMap="HsMap">
+		select * from hs_list where hsl_ho_id = #{hd_ho_id}
+	</select>
+	
+	
+	
+	<select id="selectHospitalInfo" resultType="HospitalVO">
+		select * from hospital
+	</select>
+	
+	<select id="selectSelectedSubject" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{detail.hd_hs_num}
+	</select>
+	
+	<select id="selectHoDetail" resultType="HospitalDetailVO">
+		select * from hospital_detail where hd_ho_id = #{hospital.ho_id}
+		order by hd_num desc limit 1
+	</select>
+	
+	<select id="selectReviewList" resultType="ReviewVO">
+		select * from review where vw_hd_num = #{detail.hd_num}
+		order by vw_num desc 
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectCriReviewList" resultType="ReviewVO">
+		select * from review where vw_hd_num = #{cri.search}
+		order by vw_num desc
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectTotalReviewCount" resultType="int">
+		select count(*) from review where vw_hd_num = #{cri.search}
+	</select>
+	
+	<insert id="insertReview">
+		insert into review(vw_hd_num, vw_me_id, vw_content)
+		values(#{vw.vw_hd_num}, #{vw.vw_me_id}, #{vw.vw_content})
+	</insert>
+	
+	<select id="selectReview" resultType="ReviewVO">
+		select * from review where vw_num = #{vw_num}
+	</select>
+	
+	<delete id="deleteReview">
+		delete from review where vw_num = #{vw_num}
+	</delete>
+	
+	<update id="updateReview">
+		update review
+		set vw_content = #{vw.vw_content} where vw_num = #{vw.vw_num}
+	</update>
+	
+	<select id="selectHsNum" resultType="HospitalVO">
+		select ho_hs_num from hospital where ho_id = #{hospital.ho_id}
+	</select>
+	
+	<select id="selectSubjects" resultType="HsListVO">
+		select hsl_hs_num from hs_list where hsl_ho_id = #{ho.ho_id}
+	</select>
+
+	<delete id="deleteSubjects">
+		delete from hs_list where hsl_ho_id = #{ho.ho_id} and hsl_hs_num = #{hsl_hs_num}
+	</delete>
+
+	<select id="selectSubject" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{ho.ho_hs_num}
+	</select>
+	
+	<select id="selectMyLand" resultType="LandVO">
+		select * from land where la_num = #{ho.ho_la_num}
+	</select>
+	
+	<select id="selectSdName" resultType="String">
+		select sd_name from si_do where sd_num = #{la.la_sd_num}
+	</select>
+	
+	<select id="selectSggName" resultType="String">
+		select sgg_name from si_goon_gu where sgg_num = #{la.la_sgg_num}
+	</select>
+	
+	<select id="selectEmdName" resultType="String">
+		select emd_name from eup_myeon_dong where emd_num = #{la.la_emd_num}
+	</select>
+	
+	<update id="updateName">
+		update hospital set ho_name = #{ho.ho_name} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updateCEO">
+		update hospital set ho_ceo = #{ho.ho_ceo} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updatePhone">
+		update hospital set ho_phone = #{ho.ho_phone} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updateEmail">
+		update hospital set ho_email = #{ho.ho_email} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updateDetailAddress">
+		update hospital set ho_address = #{ho.ho_address} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updatePw">
+		update hospital set ho_pw = #{pw} where ho_id = #{ho_id}
+	</update>
+	
+	<update id="updateSubject">
+		update hospital set ho_hs_num = #{hs_num} where ho_id = #{ho_id}
+	</update>
+	
+	<update id="updateHospitalLand">
+		update hospital set ho_la_num = #{la.la_num} where ho_id = #{ho.ho_id}
+	</update>
+	
+	<update id="updateSiteLand">
+		update site_management 
+		set site_la_num = #{la.la_num} where site_id = #{site.site_id}
+	</update>
+	
+	<select id="selectSgg" resultType="SiGoonGuVO">
+		select * from si_goon_gu where sgg_sd_num = #{sd_num}
+	</select>
+	
+	<select id="selectEmd" resultType="EupMyeonDongVO">
+		select * from eup_myeon_dong where emd_sgg_num = #{sgg_num}
+	</select>
+	
+	<select id="selectDetailId" resultType="HospitalDetailVO">
+		select hd_ho_id from hospital_detail where hd_num = #{hd_num}
+	</select>
+	
+	<resultMap type="LandVO" id="landMap">
+		<result property="la_num" column="la_num"/>
+		<result property="la_sd_num" column="la_sd_num"/>
+		<result property="la_sgg_num" column="la_sgg_num"/>
+		<result property="la_emd_num" column="la_emd_num"/>
+		<collection property="hospital" ofType="HospitalVO"
+					column="la_num" select="selectLaNum"/>
+	</resultMap>
+
+	<select id="selectLaNum" resultType="HospitalVO">
+		select * from hospital where ho_la_num = #{la_num} limit 1
+	</select>
+	
+	<select id="selectHoLand" resultMap="landMap">
+		select * from land where la_num = #{ho_la_num}
+	</select>
+	
+	<select id="selectHdSiDoName" resultType="SiDoVO">
+		select sd_name from si_do where sd_num = #{la_sd_num}
+	</select>
+	
+	<select id="selectHdSggName" resultType="SiGoonGuVO">
+		select sgg_name from si_goon_gu where sgg_num = #{la_sgg_num}
+	</select>
+	
+	<select id="selectHdEmdName" resultType="EupMyeonDongVO">
+		select emd_name from eup_myeon_dong where emd_num = #{la_emd_num}
+	</select>
+
+	<select id="selectHdNum" resultType="int">
+		select hd_num from hospital_detail where hd_ho_id = #{id}
+	</select>
+
+	<update id="updateHospitalRpCount">
+		UPDATE hospital
+		SET ho_report_count = ho_report_count + 1
+		WHERE ho_id = #{id}
+	</update>
+
+	<select id="selectHospitalProgram" resultType="kr.kh.team3.model.vo.HospitalProgramVO">
+		select * from hospital_program where hp_num = #{hp_num}
+	</select>
+	
+	<delete id="deleteSiteHospital">
+		delete from site_management where site_id = #{site_id}
+	</delete>
+	
+	<insert id="insertHoSub">
+		insert into hs_list(hsl_ho_id, hsl_hs_num) 
+		values(#{ho_id}, #{ho_hs_num})
+	</insert>
+	
+	<!-- programMap -->
+		<resultMap type="HsListVO" id="hslMapp">
+		<result property="hsl_num" column="hsl_num"/>
+		<result property="hsl_hs_num" column="hsl_hs_num"/>
+		<result property="hsl_ho_id" column="hsl_ho_id"/>
+		<collection property="hospital_subject" ofType="HospitalSubjectVO"
+					column="hsl_hs_num" select="selectSubjectListMap"/>
+		</resultMap>
+	
+	<!-- programMap -->
+		<resultMap type="HospitalProgramVO" id="programMap">
+		<result property="hp_num" column="hp_num"/>
+		<result property="hp_title" column="hp_title"/>
+		<result property="hp_payment" column="hp_payment"/>
+		<result property="hp_ho_id" column="hp_ho_id"/>
+		<result property="hp_hsl_num" column="hp_hsl_num"/>
+		<collection property="hsList" ofType="HsListVO"
+					column="hp_hsl_num" select="selectHsListMap"/>
+		<collection property="hospital" ofType="HospitalVO"
+					column="hp_ho_id" select="selectHospitalListMap"/>
+					
+		</resultMap>
+		
+	<!-- reservation_scheduleMap -->
+		<resultMap type="ReservationScheduleVO" id="scheduleMap">
+		<result property="rs_num" column="rs_num"/>
+		<result property="rs_hp_num" column="rs_hp_num"/>
+		<result property="rs_date" column="rs_date"/>
+		<result property="rs_time" column="rs_time"/>
+		<collection property="program" ofType="HospitalProgramVO"
+					column="rs_hp_num" select="selectHospitalPrograms"/>
+	</resultMap>
+		<!-- reservationMap -->
+		<resultMap type="ReservationVO" id="reservationMap">
+		<result property="rv_num" column="rv_num"/>
+		<result property="rv_rvs_name" column="rv_rvs_name"/>
+		<result property="rv_rs_num" column="rv_rs_num"/>
+		<result property="rv_me_id" column="rv_me_id"/>
+		<collection property="schedule" ofType="ReservationScheduleVO"
+					column="rv_rs_num" select="selectScheduleList"/>
+	</resultMap>
+	<!-- hospital -->
+	<select id="selectHospitalListMap" resultType="HospitalVO">
+		select * from hospital where ho_id = #{hp_ho_id}
+	</select>
+	<!-- subject -->
+	<select id="selectSubjectListMap" resultType="HospitalSubjectVO">
+		select * from hospital_subject where hs_num = #{hsl_hs_num}
+	</select>
+	<!-- HsList -->
+	<select id="selectHsListMap" resultMap="hslMapp">
+			select * from hs_list where hsl_num = #{hp_hsl_num}
+	</select>
+	<!-- hospital_program -->
+	<select id="selectHospitalPrograms" resultMap="programMap">
+		select * from hospital_program where hp_num = #{rs_hp_num}
+	</select>
+	
+	<!-- reservation_schedule -->
+	<select id="selectScheduleList" resultMap="scheduleMap">
+		select * from reservation_schedule where rs_num = #{rv_rs_num}
+	</select>
+	
+	<!-- reservation -->
+	<select id="selectAllReservationList" resultMap="reservationMap">
+		select * from reservation 
+		order by rv_num desc limit 10
+	</select>
+	
+	<select id="selectDetailHoId" resultType="HospitalVO">
+		select * from hospital_detail;
+	</select>
+	
+	<select id="selectHospitalDet" resultType="HospitalDetailVO">
+		select * from hospital_detail where hd_num = #{hd_num}
+	</select>
+	
+	<select id="selectHoSubAutoList" resultType="HospitalSubjectVO">
+		SELECT
+			 *
+		FROM hospital_subject
+		WHERE hs_title LIKE concat('%', #{value}, '%')
+	</select>
+	
+	<update id="updatePassword">
+		update hospital set ho_pw = #{pw}, ho_fail = 0 where ho_id = #{id}
+	</update>
+</mapper>

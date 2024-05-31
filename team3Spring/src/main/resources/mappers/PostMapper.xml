@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.PostDAO">
+	<resultMap type="kr.kh.team3.model.vo.PostVO" id="PostMap">
+		<id property="po_num" column="po_num"/>
+		<result property="po_title" column="po_title"/>
+		<result property="po_content" column = "po_content"/>
+		<result property="po_bo_num" column="po_bo_num"/>
+		<result property="po_mg_num" column="po_mg_num"/>		
+		<collection property="sitemanagement" ofType="kr.kh.team3.model.vo.SiteManagement"
+			column="po_mg_num" select="selectSiteManagement"/>
+		
+	</resultMap>
+	
+	<select id="selectPostList" resultMap="PostMap">
+		select * from post where po_bo_num = #{bo_num} and po_report_count >= 1 order by po_num limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectPostNoList" resultMap="PostMap">
+		select * from post where po_bo_num = #{bo_num} and po_report_count = 0 order by po_num limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectSiteManagement" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_num = #{po_mg_num}
+	</select>
+	
+	<select id="selectPostTotalCount" resultType="int">
+		select count(*) from post where po_bo_num = #{bo_num} and po_report_count >= 1;
+	</select>
+	
+	<select id="selectPostNoTotalCount" resultType="int">
+		select count(*) from post where po_bo_num = #{bo_num} and po_report_count = 0;
+	</select>
+	
+	<delete id="deletePost">
+		delete from post where po_num = #{post.po_num}
+	</delete>
+	
+	
+</mapper>

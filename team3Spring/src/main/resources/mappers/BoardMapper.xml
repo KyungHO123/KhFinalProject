@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.BoardDAO">
+	<!-- 게시글 수정 -->
+	<update id="updateMyPost">
+		update post set
+		po_title = #{po.po_title},
+		po_content = #{po.po_content},
+		po_bo_num = #{po.po_bo_num}
+		where po_num = #{po.po_num}
+	</update>
+	
+	<select id="selectMyPostEq" resultType="kr.kh.team3.model.vo.PostVO">
+		select * from post where po_mg_num = #{po}
+	</select>
+	
+	<select id="selectNoticeList" resultType="kr.kh.team3.model.vo.PostVO">
+		select * from post where po_bo_num = 1
+	</select>
+	<select id="selectFile" resultType="kr.kh.team3.model.vo.FileVO">
+		select * from file where
+		fi_num = #{fi}
+	</select>
+	<!-- 게시글 삭제 -->
+	<select id="selectPosta" resultType="kr.kh.team3.model.vo.PostVO" >
+		select * from post where po_num = #{rp}
+	</select>
+	
+	<delete id="deleteFile">
+		delete from file where fi_num = #{rp}
+	</delete>	
+	<delete id="deletePost">
+		delete from post where po_num = #{rp}
+	</delete>	
+	
+	<resultMap type="kr.kh.team3.model.vo.BoardVO" id="boardMap">
+		<id column="bo_num" property="bo_num" />
+		<result column="bo_title" property="bo_title" />
+		<collection property="post" ofType="PostVO" column="bo_num"
+			select="selectPost" />
+	</resultMap>
+
+	<select id="selectSiteManagement"
+		resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_num = #{po_mg_num}
+	</select>
+
+	<select id="selectRecommend1"
+		resultType="kr.kh.team3.model.vo.RecommendVO">
+		select * from recommend where re_po_num = #{po_num}
+	</select>
+
+	<select id="selectAllBoardList"
+		resultType="kr.kh.team3.model.vo.BoardVO">
+		select * from board
+	</select>
+
+	<select id="selectPost" resultType="kr.kh.team3.model.vo.PostVO">
+		select * from post where
+		po_bo_num = #{bo_num}
+	</select>
+
+	<select id="selectAllPostList"
+		resultType="kr.kh.team3.model.vo.PostVO">
+		select
+		post.*,
+		site_id as po_id,
+		Sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		Sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from
+		post
+		join
+		site_management on site_num = po_mg_num
+		left join
+		recommend on re_po_num = po_num
+		group by po_num
+		order by po_num desc
+	</select>
+
+
+	<select id="selectBooardList" resultMap="boardMap">
+		select * from board
+	</select>
+
+	<insert id="insertBoard">
+		insert into board (bo_title) value(#{board})
+	</insert>
+
+	<select id="selectBooard"
+		resultType="kr.kh.team3.model.vo.BoardVO">
+		select * from board where bo_num = #{bo_num}
+	</select>
+
+	<update id="updateBoard">
+		update board set bo_title = #{name} where bo_num =
+		#{board.bo_num}
+	</update>
+
+	<delete id="deleteBoard">
+		delete from board where bo_num = #{bo_num}
+	</delete>
+
+	<select id="selectPostList"
+		resultType="kr.kh.team3.model.vo.PostVO">
+		select
+		post.*,
+		site_id as po_id,
+		Sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		Sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from
+		post
+		join
+		site_management on site_num = po_mg_num
+		left join
+		recommend on re_po_num = po_num
+		where po_bo_num = #{bo_num}
+		<choose>
+			<when test='cri.type == "all"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%') or
+				site_id like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "writer"'>
+				and (site_id like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+		group by po_num
+		order by ${cri.order} desc
+		LIMIT #{cri.pageStart},
+		#{cri.perPageNum}
+	</select>
+
+	<select id="selectPostListCount" resultType="int">
+		select
+		count(*)
+		from
+		post
+		join
+		site_management on site_num = po_mg_num
+		left
+		join
+		recommend on re_po_num = po_num
+		where po_bo_num = #{bo_num}
+		<choose>
+			<when test='cri.type == "all"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%') or
+				site_id like
+				concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "writer"'>
+				and (site_id like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+	</select>
+
+	<!-- 보드타이틀 가져오는 매퍼 -->
+	<select id="selectBoardName" resultType="string">
+		select bo_title from
+		board where bo_num = #{num}
+	</select>
+
+	<insert id="insertFile">
+		insert into file(fi_po_num, fi_name, fi_ori_name)
+		values(#{file.fi_po_num},#{file.fi_name},#{file.fi_ori_name})
+	</insert>
+
+	<insert id="insertPost" useGeneratedKeys="true"
+		keyProperty="post.po_num">
+		insert into post(po_bo_num, po_mg_num, po_title,
+		po_content,po_date)
+		values(#{post.po_bo_num},
+		#{post.po_mg_num},#{post.po_title},#{post.po_content},now())
+	</insert>
+
+	<select id="selectUserPostDetail"
+		resultType="PostVO">
+		select post.*,
+		site_id as po_id, bo_title as po_bo_title
+		from post
+		join board on bo_num = po_bo_num
+		join site_management on site_num = po_mg_num
+		where po_num = #{num}
+	</select>
+
+	<select id="selectPostDetail"
+		resultType="kr.kh.team3.model.vo.PostVO">
+		select post.*, site_id as po_id,
+				Sum(case when re_state = 1 then 1 else 0 end)as po_up,
+				Sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from post
+		join site_management on site_num = po_mg_num
+		left join recommend on re_po_num = po_num
+		where po_num = #{num}
+	</select>
+
+	<update id="updateView">
+		update post set po_view = po_view +1 where po_num =
+		#{num}
+	</update>
+	<!-- 추천 기능 쿼리 -->
+	<select id="selectRecommend"
+		resultType="kr.kh.team3.model.vo.RecommendVO">
+		select * from recommend
+		where
+		re_mg_num = #{re.re_mg_num} and
+		re_po_num = #{re.re_po_num}
+	</select>
+
+	<insert id="insertRecommend">
+		insert into recommend(re_mg_num, re_po_num, re_state)
+		values(#{re.re_mg_num},#{re.re_po_num},#{re.re_state})
+	</insert>
+
+	<update id="updateRecommend">
+		update recommend set re_state = #{re.re_state}
+		where
+		re_po_num = #{re.re_po_num} and re_mg_num = #{re.re_mg_num}
+	</update>
+	<!-- 추천 기능 끝 -->
+
+	<select id="selectFileList"
+		resultType="kr.kh.team3.model.vo.FileVO">
+		select * from file where
+		fi_po_num = #{re}
+	</select>
+
+	<!-- 작성자 게시글 목록 -->
+	<select id="selectUserPostList"
+		resultType="kr.kh.team3.model.vo.PostVO">
+		select
+		post.*,
+		site_id as po_id,
+		Sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		Sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from
+		post
+		join
+		site_management on site_num = po_mg_num
+		left join
+		recommend on re_po_num = po_num
+		where site_id = #{po_id}
+		<choose>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+		group by po_num
+		order by po_num desc
+		LIMIT #{cri.pageStart},
+		#{cri.perPageNum}
+	</select>
+
+	<select id="selectUserPostListCount" resultType="int">
+		select
+		count(*)
+		from
+		post
+		join
+		site_management on site_num = po_mg_num
+		left join
+		recommend on re_po_num = po_num
+		where site_id = #{po_id}
+		<choose>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+	</select>
+
+	<select id="selectUserAuthority" resultType="String">
+		select
+		site_authority from site_management where site_id = #{po_id}
+	</select>
+	
+	<select id="selectSiteNum" resultType="kr.kh.team3.model.vo.SiteManagement">
+		select * from site_management where site_id = #{po_id}
+	</select>
+	
+	<select id="selectUserCmtList" resultType="kr.kh.team3.model.vo.PostVO">
+		SELECT
+		    distinct post.*,
+		    site_id as po_id,
+		    (
+		        SELECT COUNT(*)
+		        FROM recommend
+		        WHERE recommend.re_po_num = post.po_num AND recommend.re_state = 1
+		    ) AS po_up
+		FROM
+		    post
+		JOIN
+		    comment ON post.po_num = comment.co_po_num
+		JOIN
+		    site_management ON site_num = po_mg_num
+		WHERE
+		    comment.co_mg_num = #{site_num}
+		<choose>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "writer"'>
+				and (site_id like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+		order by po_num desc
+		LIMIT #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectUserCmtListCount" resultType="int">
+		SELECT COUNT(*) AS post_count
+		FROM (
+		    SELECT DISTINCT post.*, site_id as po_id,
+			    (
+			        SELECT COUNT(*)
+			        FROM recommend
+			        WHERE recommend.re_po_num = post.po_num AND recommend.re_state = 1
+			    ) AS po_up
+			FROM
+			    post
+			JOIN
+			    comment ON post.po_num = comment.co_po_num
+			JOIN
+			    site_management ON site_num = po_mg_num
+			WHERE
+			    comment.co_mg_num = #{site_num}
+		    <choose>
+				<when test='cri.type == "title"'>
+					and (po_title like concat('%', #{cri.search}, '%'))
+				</when>
+				<when test='cri.type == "titleContent"'>
+					and (po_title like concat('%', #{cri.search}, '%') or
+					po_content like concat('%', #{cri.search}, '%'))
+				</when>
+				<when test='cri.type == "writer"'>
+					and (site_id like concat('%', #{cri.search}, '%'))
+				</when>
+			</choose>
+		) AS counted_posts
+	</select>
+	
+	<select id="selectUserRecList" resultType="kr.kh.team3.model.vo.PostVO">
+		SELECT
+		    distinct post.*,
+		    site_id as po_id,
+		    (
+		        SELECT COUNT(*)
+		        FROM recommend
+		        WHERE recommend.re_po_num = post.po_num AND recommend.re_state = 1
+		    ) AS po_up
+		FROM
+		    post
+		JOIN
+		    site_management ON site_num = po_mg_num
+		JOIN 
+			recommend ON re_po_num = po_num
+		WHERE
+		    re_mg_num = #{site_num}
+		<choose>
+			<when test='cri.type == "title"'>
+				and (po_title like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "titleContent"'>
+				and (po_title like concat('%', #{cri.search}, '%') or
+				po_content like concat('%', #{cri.search}, '%'))
+			</when>
+			<when test='cri.type == "writer"'>
+				and (site_id like concat('%', #{cri.search}, '%'))
+			</when>
+		</choose>
+		order by po_num desc
+		LIMIT #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectUserRecListCount" resultType="int">
+		SELECT COUNT(*) AS post_count
+		FROM (
+			SELECT
+			    distinct post.*,
+			    site_id as po_id,
+			    (
+			        SELECT COUNT(*)
+			        FROM recommend
+			        WHERE recommend.re_po_num = post.po_num AND recommend.re_state = 1
+			    ) AS po_up
+			FROM
+			    post
+			JOIN
+			    site_management ON site_num = po_mg_num
+			JOIN 
+				recommend ON re_po_num = po_num
+			WHERE
+			    re_mg_num = #{site_num}
+			<choose>
+				<when test='cri.type == "title"'>
+					and (po_title like concat('%', #{cri.search}, '%'))
+				</when>
+				<when test='cri.type == "titleContent"'>
+					and (po_title like concat('%', #{cri.search}, '%') or
+					po_content like concat('%', #{cri.search}, '%'))
+				</when>
+				<when test='cri.type == "writer"'>
+					and (site_id like concat('%', #{cri.search}, '%'))
+				</when>
+			</choose>
+		) AS counted_posts
+	</select>
+	
+
+	<select id="selectReport"
+		resultType="kr.kh.team3.model.vo.ReportVO">
+		select * from report where rp_target = #{rp.rp_target} and
+		rp_site_num = #{rp.rp_site_num} and rp_table = #{rp.rp_table}
+	</select>
+	
+	<insert id="insertReport">
+		insert into report(rp_target,rp_name,rp_site_num,rp_table)
+		values(#{rp.rp_target},#{rp.rp_name},#{rp.rp_site_num},#{rp.rp_table})
+	</insert>
+	
+	
+	<update id="updateReport">
+		update report set rp_target = #{rp.rp_target}
+		where
+		rp_target = #{rp.rp_target} and rp_site_num = #{rp.rp_site_num}
+	</update>
+	<update id="updatePostRpCount">
+		update post set po_report_count = po_report_count +1
+		where po_num = #{rp}
+		
+	</update>
+	<update id="updateCommentRpCount">
+		update comment set co_report_count = co_report_count +1
+		where co_num = #{rp}
+		
+	</update>
+	
+	<select id="selectPostTartget" resultType="kr.kh.team3.model.vo.PostVO">
+		select * from post where po_num = #{rp}
+	</select>
+	
+	<select id="selectCommentTartget" resultType="kr.kh.team3.model.vo.CommentVO">
+		select * from comment where co_num = #{rp}
+	</select>
+	
+	<select id="selectHotPostList" resultType="kr.kh.team3.model.vo.PostVO">
+		SELECT
+		    post.*,
+		    site_id AS po_id,
+		    SUM(CASE WHEN re_state = 1 THEN 1 ELSE 0 END) AS po_up
+		FROM
+		    post
+		JOIN
+		    site_management ON site_num = po_mg_num
+		LEFT JOIN
+		    recommend ON re_po_num = po_num
+		GROUP BY
+		    po_num
+		 
+		HAVING
+    		po_up >= 1
+   		order by 
+   			po_up desc   
+    	limit 10
+	</select>
+</mapper>

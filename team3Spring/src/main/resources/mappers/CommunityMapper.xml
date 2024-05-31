@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.kh.team3.dao.CommunityDAO">
+	<!-- 게시글 resultMap -->
+	<resultMap type="PostVO" id="postMap">
+		<result property="po_num" column="po_num"/>
+		<result property="po_title" column="po_title"/>
+		<result property="po_report_count" column="po_report_count"/>
+		<result property="po_view" column="po_view"/>
+		<result property="po_date" column="po_date"/>
+		<result property="po_content" column="po_content"/>
+		<result property="po_bo_num" column="po_bo_num"/>
+		<result property="po_co_count" column="po_co_count"/>
+		<result property="po_mg_num" column="po_mg_num"/>
+		<result property="po_up" column="po_up"/>
+		<result property="po_down" column="po_down"/>
+		<collection property="sitemanagement" ofType="SiteManagement"
+		column="po_mg_num" select="selectPoMgNum"/>
+	</resultMap>
+	
+	<select id="selectPoMgNum" resultType="SiteManagement">
+		select * from site_management where site_num = #{po_mg_num}
+	</select>
+	
+	<select id="selectPostList" resultMap="postMap">
+		select post.*, 
+		sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from post 
+		left join recommend on re_po_num = po_num
+		where po_mg_num = #{site_num}
+		group by po_num
+	</select>
+	
+	<!-- 댓글 resultMap -->
+	<resultMap type="CommentVO" id="commentMap">
+		<result property="co_num" column="co_num"/>
+		<result property="co_content" column="co_content"/>
+		<result property="co_date" column="co_date"/>
+		<result property="co_report_count" column="co_report_count"/>
+		<result property="co_po_num" column="co_po_num"/>
+		<result property="co_mg_num" column="co_mg_num"/>
+		<collection property="sitemanagement" ofType="SiteManagement"
+		column="co_mg_num" select="selectCoMgNum"/>
+	</resultMap>
+	
+	<select id="selectCoMgNum" resultType="SiteManagement">
+		select * from site_management where site_num = #{co_mg_num}
+	</select>
+	
+	<select id="selectCommentList" resultMap="commentMap">
+		select * from comment where co_mg_num = #{site_num}
+	</select>
+	
+	<!-- 좋아요 resultMap -->
+	<resultMap type="kr.kh.team3.model.vo.RecommendVO" id="recommendMap">
+		<result property="re_num" column="re_num"/>
+		<result property="re_state" column="re_state"/>
+		<result property="re_po_num" column="re_po_num"/>
+		<result property="re_mg_num" column="re_mg_num"/>
+		<collection property="sitemanagement" ofType="SiteManagement"
+		column="re_mg_num" select="selectReMgNum"/>
+		<collection property="post" ofType="PostVO"
+		column="re_po_num" select="selectRePoNum"/>
+	</resultMap>
+	
+	<select id="selectReMgNum" resultType="SiteManagement">
+		select * from site_management where site_num = #{re_mg_num}
+	</select>
+	
+	<select id="selectRecommendList" resultMap="recommendMap">
+		select recommend.*,
+		sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		sum(case when re_state = -1 then 1 else 0 end)as po_down 
+		from recommend 
+		where re_mg_num = #{site_num} and re_state = 1 
+		group by re_num
+		order by re_num desc
+	</select>
+	
+	<select id="selectAllRecommendList" resultMap="recommendMap">
+		select * from recommend where re_mg_num = #{site_num}
+	</select>
+	<!-- resultMap 끝 -->
+	
+	<select id="selectCriPostList" resultType="PostVO">
+		select post.*, 
+		sum(case when re_state = 1 then 1 else 0 end)as po_up,
+		sum(case when re_state = -1 then 1 else 0 end)as po_down
+		from post
+		join site_management on site_num = po_mg_num
+		left join recommend on re_po_num = po_num 
+		where site_id = #{po_id}
+		group by po_num
+		order by po_num desc
+		LIMIT #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectPostTotalCount" resultType="int">
+		select count(*)
+		from post
+		join site_management on site_num = po_mg_num
+		where site_id = #{po_id}
+	</select>
+	
+	<select id="selectCriCommentList" resultType="CommentVO">
+		select comment.*, site_id as co_id
+		from comment
+		join site_management on site_num = co_mg_num
+		where site_id = #{co_id}
+		group by co_num
+		order by co_num desc
+		limit #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectCommentTotalCount" resultType="int">
+		select count(*) 
+		from comment 
+		join site_management on site_num = co_mg_num
+		where site_id = #{co_id}
+	</select>
+	
+	<select id="selectRePoNum" resultType="PostVO">
+		select * from post where po_num = #{re_po_num}
+	</select>
+	
+	<select id="selectCriRecommendList" resultType="PostVO">
+		SELECT 
+	        post.*, 
+	        site_id AS po_id,
+	        (SELECT COUNT(*) 
+	         FROM recommend 
+	         WHERE re_po_num = po_num 
+	           AND re_state = 1) AS po_up
+	    FROM 
+	        post
+	    JOIN 
+	        site_management ON site_num = po_mg_num
+	    WHERE 
+	        po_num IN (
+	            SELECT 
+	                re_po_num 
+	            FROM 
+	                recommend 
+	            WHERE 
+	                re_state = 1
+	       	)
+	    GROUP BY 
+	        po_num
+	    ORDER BY 
+	        po_num DESC
+	    LIMIT 
+	        #{cri.pageStart}, #{cri.perPageNum}
+	</select>
+	
+	<select id="selectRecommendTotalCount" resultType="int">
+		select count(*)
+		from recommend
+		join site_management on site_num = re_mg_num
+		where site_id = #{re_id} and re_state = 1
+	</select>
+	
+	<delete id="deleteReportPostDelete">
+		delete from post where po_num = #{po_num};
+	</delete>
+	
+	<delete id="deleteReportCommentDelete">
+		delete from comment where co_num = #{co_num};
+	</delete>
+	
+	<select id="selectDBState" resultType="RecommendVO">
+		select re_state from recommend where re_mg_num = #{site_num}
+	</select>
+	
+	<delete id="deleteDBState">
+		delete from recommend where re_mg_num = #{site_num}
+	</delete>
+</mapper>
