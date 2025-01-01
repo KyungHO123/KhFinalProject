@@ -23,3 +23,4 @@
 - BootStrap5 
 
 ## ERD 다이어그램
+![image](https://github.com/user-attachments/assets/a0c22b24-a0ce-4571-a60e-26beb27b5d11)
