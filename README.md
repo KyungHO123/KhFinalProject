@@ -40,17 +40,17 @@
      
 
 ## [기술 스택]
-### [백엔드]
+### 백엔드
 - **언어**: Java  
 - **프레임워크 및 라이브러리**: Spring Framework, MyBatis, JPA  
 - **데이터베이스**: MySQL
 - **빌드 및 관리 도구**: Maven
 
-### [프론트엔드]
+### 프론트엔드
 - **언어**: HTML5, CSS3, JavaScript  
 - **라이브러리 및 기술**: jQuery, Ajax, BootStrap5  
 
-### [기타 도구]
+### 기타 도구
 - **결제 API**: 포트원 API (아임포트)  
 - **협업 툴**: GitHub, Notion 
 
