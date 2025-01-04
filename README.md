@@ -1,5 +1,6 @@
 # TEAM3
-본 프로젝트는 KH정보교육원의 최종 프로젝트로, 병원 예약 중개 플랫폼을 개발하였습니다.
+본 프로젝트는 KH정보교육원의 최종 프로젝트로
+병원 예약 중개 플랫폼을 개발하였습니다.
 
 ## 프로젝트 개요
 - **프로젝트 명**: 병원 예약 중개사이트
@@ -13,25 +14,7 @@
   - **결제 기능**: 포트원 API를 활용한 예약 금액 결제.
 
 - **기간**: 6 ~ 7주  
-- **팀 구성**: 4명  
-
-## 기술 스택
-### 백엔드
-- **언어**: Java  
-- **프레임워크 및 라이브러리**: Spring Framework, MyBatis, JPA  
-- **데이터베이스**: MySQL
-- **빌드 및 관리 도구**: Maven
-
-### 프론트엔드
-- **언어**: HTML5, CSS3, JavaScript  
-- **라이브러리 및 기술**: jQuery, Ajax, BootStrap5  
-
-### 기타 도구
-- **결제 API**: 포트원 API (아임포트)  
-- **협업 툴**: GitHub, Notion 
-
-## ERD 다이어그램
-![image](https://github.com/user-attachments/assets/a0c22b24-a0ce-4571-a60e-26beb27b5d11)
+- **팀 구성**: 4명
 
 ## 주요 개발 내용
 1. **회원 가입 및 권한 관리**
@@ -53,3 +36,25 @@
 4. **리뷰 시스템**
    - 일반 회원은 병원 방문 후 리뷰 작성 가능.
    - 병원 리뷰는 모든 사용자가 열람 가능.
+
+     
+
+## 기술 스택
+### 백엔드
+- **언어**: Java  
+- **프레임워크 및 라이브러리**: Spring Framework, MyBatis, JPA  
+- **데이터베이스**: MySQL
+- **빌드 및 관리 도구**: Maven
+
+### 프론트엔드
+- **언어**: HTML5, CSS3, JavaScript  
+- **라이브러리 및 기술**: jQuery, Ajax, BootStrap5  
+
+### 기타 도구
+- **결제 API**: 포트원 API (아임포트)  
+- **협업 툴**: GitHub, Notion 
+
+## ERD 다이어그램
+![image](https://github.com/user-attachments/assets/a0c22b24-a0ce-4571-a60e-26beb27b5d11)
+
+
